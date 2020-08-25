@@ -114,4 +114,4 @@ def single_photogrammetry(xs, ys, Xs, Ys, Zs):
     Z_m = 0 # 平均標高
     b = calc_b(xs, ys, Xs, Ys, Zs) # b1〜b8を求める
     X_0, Y_0, Z_0, omega, phai, kappa = calc_external(b, Z_m)
-    
+
