@@ -12,4 +12,5 @@ x = np.array([
 ])
 b = np.array([1.321, 9.22, 4.3, 2.7, 12.1])
 popt, pcov = curve_fit(fn, x, np.array(fn(x, b[0], b[1], b[2], b[3], b[4])))
+print(b)
 print(popt)
