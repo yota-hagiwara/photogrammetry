@@ -5,13 +5,6 @@ from scipy.optimize import curve_fit
 def fn(x, a, b, c, d, e):
     return (a * x[0] + b * x[1] + c) / (d * x[0] + e * x[1] + 1)
 
-# y(x0,x1) data:
-#    x0=0 1 2
-# ___________
-# x1=0 |0 1 2
-# x1=1 |1 2 3
-# x1=2 |2 3 4
-
 
 x = np.array([
     [0, 0, 1, 1, 1, 2, 2, 2, 3, 3],
