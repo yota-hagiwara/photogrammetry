@@ -30,8 +30,15 @@ def R(omega, phai, kappa):
     ])
 
 
-def calc_b(x, y, X, Y, Z):
-    return np.array([1, 1, 1, 1, 1, 1, 1, 1])
+def calc_b(x, y, X, Y):
+    X_dataset = np.array([x, y, -x * X, -y * X]).T
+    X_data = np.c_[X_dataset, np.ones(X_dataset.shape[0])]
+    b1, b2, b7, b8, b3 = np.linalg.lstsq(X_data, X, rcond=None)
+    Y += x * Y * b7 + y * Y * b8
+    Y_dataset = np.array([x, y]).T
+    Y_data = np.c_[Y_dataset, np.ones(Y_dataset.shape[0])]
+    b4, b5, b6 = np.linalg.lstsq(Y_data, Y, rcond=None)
+    return (b1, b2, b3, b4, b5, b6, b7, b8)
 
 
 def calc_external(b, Z_m=0):
@@ -111,7 +118,7 @@ def taylor(xs, ys, Xs, Ys, Zs, X_0, Y_0, Z_0, omega, phai, kappa):
 
 # x, y, X, Yはそれぞれ基準点の数分の要素を持つ座標配列
 def single_photogrammetry(xs, ys, Xs, Ys, Zs):
-    Z_m = 0 # 平均標高
-    b = calc_b(xs, ys, Xs, Ys, Zs) # b1〜b8を求める
+    Z_m = sum(Zs) / len(Zs) # 平均標高
+    b = calc_b(xs, ys, Xs, Ys) # b1〜b8を求める
     X_0, Y_0, Z_0, omega, phai, kappa = calc_external(b, Z_m)
 
