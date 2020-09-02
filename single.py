@@ -33,11 +33,11 @@ def R(omega, phai, kappa):
 def calc_b(x, y, X, Y):
     X_dataset = np.array([x, y, -x * X, -y * X]).T
     X_data = np.c_[X_dataset, np.ones(X_dataset.shape[0])]
-    b1, b2, b7, b8, b3 = np.linalg.lstsq(X_data, X, rcond=None)
+    b1, b2, b7, b8, b3 = np.linalg.lstsq(X_data, X, rcond=None)[0]
     Y += x * Y * b7 + y * Y * b8
     Y_dataset = np.array([x, y]).T
     Y_data = np.c_[Y_dataset, np.ones(Y_dataset.shape[0])]
-    b4, b5, b6 = np.linalg.lstsq(Y_data, Y, rcond=None)
+    b4, b5, b6 = np.linalg.lstsq(Y_data, Y, rcond=None)[0]
     return (b1, b2, b3, b4, b5, b6, b7, b8)
 
 
@@ -104,21 +104,49 @@ def calc_coefficient(X, Y, Z, X_0, Y_0, Z_0, omega, phai, kappa):
 
 
 def taylor(xs, ys, Xs, Ys, Zs, X_0, Y_0, Z_0, omega, phai, kappa):
-    F_Cs = np.array([[0 for j in range(7)] for i in range(len(xs))])
-    G_Cs = np.array([[0 for j in range(7)] for i in range(len(xs))])
+    F_Cs = np.array([[0 for j in range(len(xs))] for i in range(7)])
+    G_Cs = np.array([[0 for j in range(len(xs))] for i in range(7)])
     for i in range(len(xs)):
         x, y, X, Y, Z = xs[i], ys[i], Xs[i], Ys[i], Zs[i]
         coefficients = calc_coefficient(X, Y, Z, X_0, Y_0, Z_0, omega, phai, kappa)
         for j in range(6):
-            F_Cs[j] = coefficients[j]
-            G_Cs[j] = coefficients[j + 6]
-        F_Cs[i][6], G_Cs[i][6] = FG(x, y, X, Y, Z, X_0, Y_0, Z_0, omega, phai, kappa)
+            F_Cs[j][i] = coefficients[i][j]
+            G_Cs[j][i] = coefficients[i][j + 6]
+        F_Cs[6][i], G_Cs[6][i] = FG(x, y, X, Y, Z, X_0, Y_0, Z_0, omega, phai, kappa)
     return (F_Cs, G_Cs)
+
+
+def calc_diff(step):
+    dataset = np.array([step[0], step[1], step[2], step[3], step[4], step[5]]).T
+    data = np.c_[dataset, np.ones(dataset.shape[0])]
+    X, Y, Z, omega, phai, kappa, dummy = np.linalg.lstsq(data, step[6], rcond=None)[0]
+    return (X, Y, Z, omega, phai, kappa)
+
+
+def calc_deviation(step, diff):
+    v = 0
+    for index in range(len(step[0])):
+        c = sum([step[c_index][index] * diff[c_index] for c_index in range(6)])
+        v += (step[6][index] - c)**2
+    return v
+
+
+def calculate(xs, ys, Xs, Ys, Zs, X_0, Y_0, Z_0, omega, phai, kappa):
+    X, Y, Z, o, p, k = X_0, Y_0, Z_0, omega, phai, kappa
+    while True:
+        step_f, step_g = taylor(xs, ys, Xs, Ys, Zs, X, Y, Z, o, p, k)
+        diff = calc_diff(step_f + step_g)
+        vx, vy = calc_deviation(step_f, diff), calc_deviation(step_g, diff)
+        gamma = sqrt((vx + vy) / (2 * len(xs) - 6))
+        if gamma < 5.0e-6:
+            break
+        X, Y, Z, o, p, k = diff
+    return (X, Y, Z, o, p, k)
 
 
 # x, y, X, Yはそれぞれ基準点の数分の要素を持つ座標配列
 def single_photogrammetry(xs, ys, Xs, Ys, Zs):
     Z_m = sum(Zs) / len(Zs) # 平均標高
     b = calc_b(xs, ys, Xs, Ys) # b1〜b8を求める
-    X_0, Y_0, Z_0, omega, phai, kappa = calc_external(b, Z_m)
-
+    X_0, Y_0, Z_0, omega, phai, kappa = calc_external(b, Z_m) # 初期値を求める
+    return calculate(xs, ys, Xs, Ys, Zs, X_0, Y_0, Z_0, omega, phai, kappa) #　逐次近似解法により外部標定要素を決定

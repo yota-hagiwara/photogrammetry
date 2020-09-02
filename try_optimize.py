@@ -19,6 +19,13 @@ X = np.array([3, 3, 2, 2, 2, 1, 1, 1, 2, 4])
 Y = np.array([1, 8, 1, 6, 1, 2, 3, 2, 3, 2])
 b = np.array([2., 4., 3., 6., 5., 7., 4., 9.])
 # X, Y = XY(x, y, b)
-Y += x * y * 2
 # print(calc(x, y, Y))
-print(Y)
+# print(Y)
+a = np.array([4., -17.])
+f = lambda x, y, a, F: a[0] * x + a[1] * y - F
+dataset = np.array([x, y]).T
+data = np.c_[dataset, np.ones(dataset.shape[0])]
+f_array = f(x, y, a, 0)
+gai, ji, shine = np.linalg.lstsq(data, f_array, rcond=None)[0]
+print(gai)
+print(ji)
