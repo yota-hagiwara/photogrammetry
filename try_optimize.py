@@ -26,6 +26,6 @@ f = lambda x, y, a, F: a[0] * x + a[1] * y - F
 dataset = np.array([x, y]).T
 data = np.c_[dataset, np.ones(dataset.shape[0])]
 f_array = f(x, y, a, 0)
-gai, ji, shine = np.linalg.lstsq(data, f_array, rcond=None)[0]
-print(gai)
-print(ji)
+a1 = np.array([[1, 2], [2, 3], [3, 4]])
+a2 = np.array([[2, 4], [4, 6], [6, 8]])
+print(a1 + a2)
